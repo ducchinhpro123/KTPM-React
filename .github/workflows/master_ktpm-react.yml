@@ -52,39 +52,53 @@ jobs:
     needs: build
     environment:
       name: production
-      url: ${{ steps.create-aci.outputs.fqdn }}
-
+    
     steps:
       - name: Set lowercase repository name
         id: repo-name
         run: |
           echo "REPO_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
-
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
           
       - name: Create unique DNS name
         id: dns-name
         run: |
           DNS_NAME="ktpm-react-$(date +%s | sha256sum | head -c 6)"
           echo "DNS_NAME=$DNS_NAME" >> $GITHUB_ENV
+      
+      - name: Azure CLI Login
+        # Using the existing Azure service principal credentials from your repository
+        run: |
+          az login --service-principal \
+            -u ${{ secrets.AZUREAPPSERVICE_CLIENTID_429C10C359624AF9A218367A7E89FF67 }} \
+            -p ${{ secrets.AZUREAPPSERVICE_CLIENTSECRET_24DD19CF290D4319A5253AAF742B473A }} \
+            --tenant ${{ secrets.AZUREAPPSERVICE_TENANTID_46D896592BCC410AA7517189C44E393B }}
+          
+          # Verify login success
+          az account show
           
       - name: Deploy to Azure Container Instances
         id: create-aci
-        uses: azure/CLI@v2
-        with:
-          inlineScript: |
-            az group create --name ktpm-react-rg --location eastus
-            
-            FQDN=$(az container create \
-              --resource-group ktpm-react-rg \
-              --name ktpm-react-container \
-              --image ghcr.io/${{ env.REPO_NAME }}:${{ github.sha }} \
-              --dns-name-label ${{ env.DNS_NAME }} \
-              --ports 80 \
-              --query ipAddress.fqdn \
-              --output tsv)
-              
-            echo "::set-output name=fqdn::http://${FQDN}"
+        run: |
+          # Create resource group if it doesn't exist
+          az group create --name ktpm-react-rg \
+            --location eastus \
+            --subscription ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_D471BA1824FF4C30AFBE13D7C7C2B793 }}
+          
+          # Create container instance
+          FQDN=$(az container create \
+            --resource-group ktpm-react-rg \
+            --name ktpm-react-container \
+            --image ghcr.io/${{ env.REPO_NAME }}:${{ github.sha }} \
+            --dns-name-label ${{ env.DNS_NAME }} \
+            --ports 80 \
+            --registry-username ${{ github.actor }} \
+            --registry-password ${{ secrets.GITHUB_TOKEN }} \
+            --registry-login-server ghcr.io \
+            --query ipAddress.fqdn \
+            --output tsv)
+          
+          echo "Container deployed to: http://${FQDN}"
+          echo "fqdn=http://${FQDN}" >> $GITHUB_OUTPUT
+          
+      - name: Display deployment URL
+        run: echo "Your application is available at ${{ steps.create-aci.outputs.fqdn }}"
