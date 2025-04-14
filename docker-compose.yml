@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  # Frontend React application
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    # For development, you can use volumes to enable hot reloading
+    # volumes:
+    #  - ./:/app
+    #  - /app/node_modules
