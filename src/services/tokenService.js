@@ -72,9 +72,11 @@ export const isAuthenticated = () => {
   return !!getToken();
 };
 
-export default {
+const tokenService = {
   setToken,
   getToken,
   removeToken,
   isAuthenticated
 };
+
+export default tokenService;
