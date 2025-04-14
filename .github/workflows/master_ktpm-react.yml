@@ -101,6 +101,8 @@ jobs:
             --dns-name-label ${{ env.DNS_NAME }} \
             --ports 80 \
             --os-type Linux \
+            --cpu 1 \
+            --memory 1.5 \
             --registry-username ${{ github.actor }} \
             --registry-password ${{ secrets.GITHUB_TOKEN }} \
             --registry-login-server ghcr.io \
