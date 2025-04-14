@@ -66,12 +66,11 @@ jobs:
           echo "DNS_NAME=$DNS_NAME" >> $GITHUB_ENV
           
       - name: Azure CLI Login
-        # Using the existing Azure service principal credentials from your repository
         run: |
           az login --service-principal \
-            --username="${{ secrets.AZUREAPPSERVICE_CLIENTID_429C10C359624AF9A218367A7E89FF67 }}" \
-            --password="${{ secrets.AZUREAPPSERVICE_CLIENTSECRET_24DD19CF290D4319A5253AAF742B473A }}" \
-            --tenant="${{ secrets.AZUREAPPSERVICE_TENANTID_46D896592BCC410AA7517189C44E393B }}"
+            --username="c8776ed0-8c3d-41e9-a53b-80787829971f" \
+            --password="okZ8Q~meO0BhsrZF-NcrwywqFmr9lPS2E.O.8aO1" \
+            --tenant="05b8cc62-b232-4cbe-a795-af7ce6614776"
           
           # Verify login success
           az account show
@@ -82,7 +81,7 @@ jobs:
           # Create resource group if it doesn't exist
           az group create --name ktpm-react-rg \
             --location eastus \
-            --subscription ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_D471BA1824FF4C30AFBE13D7C7C2B793 }}
+            --subscription 632c59d8-3b7f-4df5-abd5-361a86805707
           
           # Create container instance
           FQDN=$(az container create \
