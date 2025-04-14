@@ -28,12 +28,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set lowercase repository name
+        id: repo-name
+        run: |
+          echo "REPO_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Build and push container image to registry
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository }}:${{ github.sha }},ghcr.io/${{ github.repository }}:latest
+          tags: ghcr.io/${{ env.REPO_NAME }}:${{ github.sha }},ghcr.io/${{ env.REPO_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -49,6 +54,11 @@ jobs:
       packages: read #This is required for accessing the container image
 
     steps:
+      - name: Set lowercase repository name
+        id: repo-name
+        run: |
+          echo "REPO_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -62,5 +72,5 @@ jobs:
         with:
           app-name: 'ktpm-react'
           slot-name: 'production'
-          images: ghcr.io/${{ github.repository }}:${{ github.sha }}
+          images: ghcr.io/${{ env.REPO_NAME }}:${{ github.sha }}
 
