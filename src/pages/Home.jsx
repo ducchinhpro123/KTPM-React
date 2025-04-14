@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import API from '../services/api';
 import debounce from 'lodash/debounce';
-import Footer from '../components/Footer';
 import ProductCard from '../components/ProductCard'; // Import ProductCard
 import useDocumentTitle from '../hooks/useDocumentTitle';
 
@@ -26,7 +25,7 @@ const Home = () => {
   ];
 
   // Hàm gọi API tìm kiếm sản phẩm
-  const fetchProducts = async (query = searchQuery) => {
+  const fetchProducts = useCallback(async (query = searchQuery) => {
     try {
       let response;
       if (selectedCategory) {
@@ -67,10 +66,10 @@ const Home = () => {
     } catch (err) {
       setError('Failed to fetch products. Please try again.');
     }
-  };
+  }, [searchQuery, priceRange, selectedCategory, sortBy]); // Added all dependencies
 
-  // Hàm gọi API lấy gợi ý tìm kiếm
-  const fetchSuggestions = async (query) => {
+  // Wrap fetchSuggestions in useCallback
+  const fetchSuggestions = useCallback(async (query) => {
     try {
       const response = await API.get('/products/suggestions', {
         params: { q: query },
@@ -79,16 +78,25 @@ const Home = () => {
     } catch (err) {
       console.error('Failed to fetch suggestions:', err);
     }
-  };
+  }, []);
 
+  // Memoize the debounced functions using inline functions
   const debouncedFetchProducts = useCallback(
-    debounce((query) => fetchProducts(query), 300),
-    [priceRange, selectedCategory, sortBy]
+    (query) => {
+      const debouncedFn = debounce((q) => fetchProducts(q), 300);
+      debouncedFn(query);
+      return debouncedFn;
+    },
+    [fetchProducts]
   );
 
   const debouncedFetchSuggestions = useCallback(
-    debounce((query) => fetchSuggestions(query), 300),
-    []
+    (query) => {
+      const debouncedFn = debounce((q) => fetchSuggestions(q), 300);
+      debouncedFn(query);
+      return debouncedFn;
+    },
+    [fetchSuggestions]
   );
 
   const handleSearchChange = (e) => {
@@ -112,7 +120,7 @@ const Home = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, [priceRange, selectedCategory, sortBy]);
+  }, [fetchProducts]); // Added fetchProducts as dependency
 
   return (
     <div className="container mx-auto px-4 py-12 bg-gray-50 min-h-screen">

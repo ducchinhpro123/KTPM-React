@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import API from '../../services/api';
 import Modal from '../../components/Modal'; // Import Modal component
 
@@ -14,13 +14,8 @@ const ManageProducts = () => {
   const [categories, setCategories] = useState([]); // State for available categories
   const [loadingCategories, setLoadingCategories] = useState(false); // Loading state for categories
 
-  useEffect(() => {
-    fetchProducts();
-    fetchCategories(); // Fetch available categories when component mounts
-  }, []);
-
-  // Fetch available product categories
-  const fetchCategories = async () => {
+  // Fetch available product categories wrapped in useCallback
+  const fetchCategories = useCallback(async () => {
     setLoadingCategories(true);
     try {
       // Step 1: First try to extract categories from existing products
@@ -77,7 +72,12 @@ const ManageProducts = () => {
     } finally {
       setLoadingCategories(false);
     }
-  };
+  }, [newProduct.category]); // Added dependency for newProduct.category
+
+  useEffect(() => {
+    fetchProducts();
+    fetchCategories(); // Fetch available categories when component mounts
+  }, [fetchCategories]); // Added fetchCategories to dependency array
 
   const fetchProducts = async () => {
     setLoading(true); // Set loading true
