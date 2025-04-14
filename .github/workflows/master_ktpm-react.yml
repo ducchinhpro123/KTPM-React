@@ -100,6 +100,7 @@ jobs:
             --image ghcr.io/${{ env.REPO_NAME }}:${{ github.sha }} \
             --dns-name-label ${{ env.DNS_NAME }} \
             --ports 80 \
+            --os-type Linux \
             --registry-username ${{ github.actor }} \
             --registry-password ${{ secrets.GITHUB_TOKEN }} \
             --registry-login-server ghcr.io \
