@@ -6,7 +6,7 @@ import { addItemToCart } from '../store/cartSlice';
 const ProductCard = ({ product }) => {
   const dispatch = useDispatch();
   const [adding, setAdding] = useState(false);
-  const { loading, error } = useSelector(state => state.cart);
+  const { loading } = useSelector(state => state.cart);
   const { token } = useSelector(state => state.user);
   
   const handleAddToCart = (e) => {
