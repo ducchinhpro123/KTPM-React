@@ -1,7 +1,5 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy Docker container to Azure Web App - ktpm-react
+# Docs for the Azure Container Instances deployment workflow
+name: Build and deploy Docker container to Azure Container Instances
 
 on:
   push:
@@ -54,7 +52,7 @@ jobs:
     needs: build
     environment:
       name: production
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+      url: ${{ steps.create-aci.outputs.fqdn }}
 
     steps:
       - name: Set lowercase repository name
@@ -62,12 +60,31 @@ jobs:
         run: |
           echo "REPO_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
-      # Deploy using publish profile credentials instead of federated identity
-      - name: Deploy to Azure Web App
-        id: deploy-to-webapp
-        uses: azure/webapps-deploy@v3
+      - name: Azure Login
+        uses: azure/login@v2
         with:
-          app-name: 'ktpm-react'
-          publish-profile: ${{ secrets.AZUREWEBAPP_PUBLISHPROFILE }}
-          images: ghcr.io/${{ env.REPO_NAME }}:${{ github.sha }}
-
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          
+      - name: Create unique DNS name
+        id: dns-name
+        run: |
+          DNS_NAME="ktpm-react-$(date +%s | sha256sum | head -c 6)"
+          echo "DNS_NAME=$DNS_NAME" >> $GITHUB_ENV
+          
+      - name: Deploy to Azure Container Instances
+        id: create-aci
+        uses: azure/CLI@v2
+        with:
+          inlineScript: |
+            az group create --name ktpm-react-rg --location eastus
+            
+            FQDN=$(az container create \
+              --resource-group ktpm-react-rg \
+              --name ktpm-react-container \
+              --image ghcr.io/${{ env.REPO_NAME }}:${{ github.sha }} \
+              --dns-name-label ${{ env.DNS_NAME }} \
+              --ports 80 \
+              --query ipAddress.fqdn \
+              --output tsv)
+              
+            echo "::set-output name=fqdn::http://${FQDN}"
