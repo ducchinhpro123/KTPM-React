@@ -68,12 +68,22 @@ jobs:
       - name: Azure CLI Login
         run: |
           az login --service-principal \
-            --username="c8776ed0-8c3d-41e9-a53b-80787829971f" \
-            --password="okZ8Q~meO0BhsrZF-NcrwywqFmr9lPS2E.O.8aO1" \
-            --tenant="05b8cc62-b232-4cbe-a795-af7ce6614776"
+            --username="${{ secrets.AZURE_CLIENT_ID }}" \
+            --password="${{ secrets.AZURE_CLIENT_SECRET }}" \
+            --tenant="${{ secrets.AZURE_TENANT_ID }}"
           
           # Verify login success
           az account show
+      
+      - name: Register Microsoft.ContainerInstance provider
+        run: |
+          # Register the Microsoft.ContainerInstance namespace
+          echo "Registering Microsoft.ContainerInstance resource provider..."
+          az provider register --namespace Microsoft.ContainerInstance
+          
+          # Wait for registration to complete
+          echo "Waiting for registration to complete (this may take a few minutes)..."
+          az provider show -n Microsoft.ContainerInstance --query "registrationState" -o tsv
           
       - name: Deploy to Azure Container Instances
         id: create-aci
@@ -81,7 +91,7 @@ jobs:
           # Create resource group if it doesn't exist
           az group create --name ktpm-react-rg \
             --location eastus \
-            --subscription 632c59d8-3b7f-4df5-abd5-361a86805707
+            --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           
           # Create container instance
           FQDN=$(az container create \
