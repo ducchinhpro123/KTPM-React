@@ -63,3 +63,4 @@ jobs:
           app-name: 'ktpm-react'
           slot-name: 'production'
           images: ghcr.io/${{ github.repository | toLowerCase() }}:${{ github.sha }}
+
