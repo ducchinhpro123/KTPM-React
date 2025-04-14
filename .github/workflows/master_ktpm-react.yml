@@ -64,14 +64,14 @@ jobs:
         run: |
           DNS_NAME="ktpm-react-$(date +%s | sha256sum | head -c 6)"
           echo "DNS_NAME=$DNS_NAME" >> $GITHUB_ENV
-      
+          
       - name: Azure CLI Login
         # Using the existing Azure service principal credentials from your repository
         run: |
           az login --service-principal \
-            --username ${{ secrets.AZUREAPPSERVICE_CLIENTID_429C10C359624AF9A218367A7E89FF67 }} \
-            --password "${{ secrets.AZUREAPPSERVICE_CLIENTSECRET_24DD19CF290D4319A5253AAF742B473A }}" \
-            --tenant ${{ secrets.AZUREAPPSERVICE_TENANTID_46D896592BCC410AA7517189C44E393B }}
+            --username="${{ secrets.AZUREAPPSERVICE_CLIENTID_429C10C359624AF9A218367A7E89FF67 }}" \
+            --password="${{ secrets.AZUREAPPSERVICE_CLIENTSECRET_24DD19CF290D4319A5253AAF742B473A }}" \
+            --tenant="${{ secrets.AZUREAPPSERVICE_TENANTID_46D896592BCC410AA7517189C44E393B }}"
           
           # Verify login success
           az account show
