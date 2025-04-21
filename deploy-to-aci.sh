@@ -8,8 +8,17 @@ CONTAINER_NAME="ktpm-react-container"
 DNS_NAME_LABEL="ktpm-react-app" # Change this to a unique value
 IMAGE="ghcr.io/ducchinhpro123/ktpm-react:latest" # Update with your image name
 REGISTRY_SERVER="ghcr.io"
-USERNAME="$GITHUB_USERNAME" # Replace with your GitHub username when running
-PASSWORD="$GITHUB_TOKEN" # Replace with your GitHub PAT when running
+
+# Registry credentials: can pass as args or via env vars GITHUB_USERNAME and GITHUB_TOKEN
+USERNAME="${1:-$GITHUB_USERNAME}"
+PASSWORD="${2:-$GITHUB_TOKEN}"
+
+# Ensure credentials are provided
+if [ -z "$USERNAME" ] || [ -z "$PASSWORD" ]; then
+  echo "Error: Registry credentials not provided."
+  echo "Usage: $0 <registry-username> <registry-password> or set GITHUB_USERNAME and GITHUB_TOKEN env vars"
+  exit 1
+fi
 
 # Create resource group if it doesn't exist
 echo "Creating resource group..."
@@ -23,6 +32,7 @@ az container create \
   --image $IMAGE \
   --dns-name-label $DNS_NAME_LABEL \
   --ports 80 \
+  --os-type Linux \
   --registry-username $USERNAME \
   --registry-password $PASSWORD \
   --registry-login-server $REGISTRY_SERVER \
