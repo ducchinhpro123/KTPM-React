@@ -4,7 +4,8 @@ import API from '../../services/api';
 const ManageUsers = () => {
   const [users, setUsers] = useState([]);
   const [editingUser, setEditingUser] = useState(null); // User đang được chỉnh sửa
-  const [newUser, setNewUser] = useState({ name: '', email: '', role: 'user' }); // User mới
+  const [newUser, setNewUser] = useState({ name: '', email: '', role: 'user', password: '' }); // User mới
+  const [notification, setNotification] = useState({ type: '', message: '' });
 
   // Lấy danh sách người dùng
   useEffect(() => {
@@ -22,12 +23,15 @@ const ManageUsers = () => {
 
   // Thêm người dùng mới
   const handleAddUser = async () => {
+    setNotification({ type: '', message: '' });
     try {
       await API.post('/users', newUser);
       fetchUsers(); // Refresh danh sách người dùng
-      setNewUser({ name: '', email: '', role: 'user' }); // Reset form
+      setNewUser({ name: '', email: '', role: 'user', password: '' }); // Reset form
+      setNotification({ type: 'success', message: 'User added successfully.' });
     } catch (error) {
       console.error('Failed to add user:', error);
+      setNotification({ type: 'error', message: `Failed to add user: ${error.message}` });
     }
   };
 
@@ -54,6 +58,11 @@ const ManageUsers = () => {
 
   return (
     <div className="container mx-auto py-8">
+      {notification.message && (
+        <div className={`mb-4 p-2 rounded ${notification.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+          {notification.message}
+        </div>
+      )}
       <h1 className="text-3xl font-bold text-center mb-8">Manage Users</h1>
 
       {/* Form thêm người dùng */}
@@ -71,6 +80,13 @@ const ManageUsers = () => {
           placeholder="Email"
           value={newUser.email}
           onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+          className="border p-2 rounded-lg mr-2"
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={newUser.password}
+          onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
           className="border p-2 rounded-lg mr-2"
         />
         <select
